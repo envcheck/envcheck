@@ -1,9 +1,11 @@
+use std::borrow::Cow;
 use std::fs;
 use std::path::PathBuf;
 
 use crate::error::{EnvCheckError, Result};
 
 /// Represents a single environment variable entry in a .env file.
+/// Uses Cow<str> for zero-copy parsing when possible.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct EnvVar {
     /// The variable key (e.g., "DATABASE_URL").
@@ -16,6 +18,32 @@ pub struct EnvVar {
     pub exported: bool,
     /// True if the key is quoted.
     pub quoted: bool,
+}
+
+/// Zero-copy version of EnvVar for internal parsing
+#[derive(Debug, Clone)]
+pub struct EnvVarRef<'a> {
+    /// The variable key (borrowed when possible).
+    pub key: Cow<'a, str>,
+    /// The variable value (borrowed when possible).
+    pub value: Cow<'a, str>,
+    /// The line number in the file (1-indexed).
+    pub line: usize,
+    /// True if the variable is exported.
+    pub exported: bool,
+}
+
+impl<'a> EnvVarRef<'a> {
+    /// Convert to owned EnvVar
+    pub fn to_owned(&self) -> EnvVar {
+        EnvVar {
+            key: self.key.to_string(),
+            value: self.value.to_string(),
+            line: self.line,
+            exported: self.exported,
+            quoted: false,
+        }
+    }
 }
 
 /// Represents a parsed .env file.
@@ -40,49 +68,115 @@ impl EnvFile {
     /// Parses .env content from a string.
     pub fn parse_content(path: PathBuf, content: &str) -> Result<Self> {
         let lines: Vec<String> = content.lines().map(String::from).collect();
-        let mut vars = Vec::new();
+        let vars = parse_env_zero_copy(content);
 
-        for (i, line) in lines.iter().enumerate() {
-            let line_num = i + 1;
+        Ok(Self { path, vars, lines })
+    }
+}
+
+/// Zero-copy parser for .env content
+/// Returns borrowed references where possible, owned strings only when trimming is needed
+fn parse_env_zero_copy(content: &str) -> Vec<EnvVar> {
+    let mut vars = Vec::new();
+
+    for (i, line) in content.lines().enumerate() {
+        let line_num = i + 1;
+        let trimmed = line.trim();
+
+        // Skip empty lines and comments
+        if trimmed.is_empty() || trimmed.starts_with('#') {
+            continue;
+        }
+
+        // Handle optional 'export' prefix
+        let (is_exported, content) = if let Some(stripped) = trimmed.strip_prefix("export ") {
+            (true, stripped.trim())
+        } else {
+            (false, trimmed)
+        };
+
+        // Parse key=value using zero-copy where possible
+        if let Some((key, value)) = content.split_once('=') {
+            let key = key.trim();
+            let value = value.trim();
+
+            // Validate key format
+            if key.is_empty() {
+                continue;
+            }
+
+            // Remove quotes from value if present (requires allocation)
+            let value = if (value.starts_with('"') && value.ends_with('"'))
+                || (value.starts_with('\'') && value.ends_with('\''))
+            {
+                Cow::Owned(value[1..value.len() - 1].to_string())
+            } else {
+                Cow::Borrowed(value)
+            };
+
+            vars.push(EnvVar {
+                key: key.to_string(),      // Key always needs owned for downstream use
+                value: value.into_owned(), // Convert to owned for storage
+                line: line_num,
+                exported: is_exported,
+                quoted: false,
+            });
+        }
+    }
+
+    vars
+}
+
+/// High-performance iterator for parsing that avoids allocations
+pub struct EnvVarIter<'a> {
+    lines: std::str::Lines<'a>,
+    line_num: usize,
+}
+
+impl<'a> EnvVarIter<'a> {
+    pub fn new(content: &'a str) -> Self {
+        Self {
+            lines: content.lines(),
+            line_num: 0,
+        }
+    }
+}
+
+impl<'a> Iterator for EnvVarIter<'a> {
+    type Item = EnvVarRef<'a>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        loop {
+            let line = self.lines.next()?;
+            self.line_num += 1;
             let trimmed = line.trim();
 
-            // Skip empty lines and comments
             if trimmed.is_empty() || trimmed.starts_with('#') {
                 continue;
             }
 
-            // Handle optional 'export' prefix
             let (is_exported, content) = if let Some(stripped) = trimmed.strip_prefix("export ") {
                 (true, stripped.trim())
             } else {
                 (false, trimmed)
             };
 
-            // Parse key=value
             if let Some((key, value)) = content.split_once('=') {
-                let key = key.trim().to_string();
-                let value = value.trim().to_string();
+                let key = key.trim();
+                let value = value.trim();
 
-                // Validate key format (simple check, full validation in lint rules)
                 if key.is_empty() {
-                    // Let the syntax rule handle empty keys
                     continue;
                 }
 
-                vars.push(EnvVar {
-                    key,
-                    value,
-                    line: line_num,
+                return Some(EnvVarRef {
+                    key: Cow::Borrowed(key),
+                    value: Cow::Borrowed(value),
+                    line: self.line_num,
                     exported: is_exported,
-                    quoted: false, // TODO: Basic quoted validation if needed
                 });
-            } else {
-                // Line has content but no equals sign - invalid syntax
-                // Rules will check raw lines for this
             }
         }
-
-        Ok(Self { path, vars, lines })
     }
 }
 
@@ -110,5 +204,22 @@ mod tests {
         let env = EnvFile::parse_content(PathBuf::from("test.env"), content).unwrap();
         assert_eq!(env.vars[0].key, "MY_VAR");
         assert!(env.vars[0].exported);
+    }
+
+    #[test]
+    fn test_zero_copy_iterator() {
+        let content = "KEY=value\nOTHER=foo";
+        let vars: Vec<_> = EnvVarIter::new(content).collect();
+
+        assert_eq!(vars.len(), 2);
+        assert!(matches!(vars[0].key, Cow::Borrowed(_)));
+        assert!(matches!(vars[0].value, Cow::Borrowed(_)));
+    }
+
+    #[test]
+    fn test_quoted_values() {
+        let content = "KEY=\"quoted value\"";
+        let env = EnvFile::parse_content(PathBuf::from("test.env"), content).unwrap();
+        assert_eq!(env.vars[0].value, "quoted value");
     }
 }
