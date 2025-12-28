@@ -1,3 +1,15 @@
+# [1.1.0](https://github.com/envcheck/envcheck/compare/v1.0.0...v1.1.0) (2025-12-28)
+
+
+### Features
+
+* **argocd:** add kustomize.commonEnv and multi-source support ([ea4e58c](https://github.com/envcheck/envcheck/commit/ea4e58c5048ef37bfa16287d5b527dbbe7df6e9a))
+
+
+### Performance Improvements
+
+* add Zero-Copy parser with Cow<str> ([fa94043](https://github.com/envcheck/envcheck/commit/fa9404304c541601e256efeebde154d08b196b6c))
+
 # 1.0.0 (2025-12-28)
 
 
