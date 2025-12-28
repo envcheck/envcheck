@@ -1,0 +1,26 @@
+# K8s ConfigMap fixture for testing k8s-sync command
+# The data keys should be detected as environment variables
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: default
+data:
+  # These keys should be detected
+  APP_NAME: "EnvCheck"
+  APP_ENV: "production"
+  APP_PORT: "3000"
+  APP_DEBUG: "false"
+
+  # Database config
+  DATABASE_HOST: "postgres.default.svc.cluster.local"
+  DATABASE_PORT: "5432"
+  DATABASE_NAME: "envcheck"
+
+  # Redis config
+  REDIS_HOST: "redis.default.svc.cluster.local"
+  REDIS_PORT: "6379"
+
+  # Non-standard config file (should still detect key)
+  LOG_LEVEL: "info"

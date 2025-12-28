@@ -1,0 +1,17 @@
+- id: envcheck
+  name: envcheck
+  description: Fast, modern Rust CLI for linting .env files
+  entry: envcheck lint
+  language: rust
+  files: \.env.*$
+  types: [text]
+  minimum_pre_commit_version: "2.9.0"
+
+- id: envcheck-k8s
+  name: envcheck-k8s
+  description: Sync K8s manifests with .env files
+  entry: envcheck k8s-sync
+  language: rust
+  files: \.(env.*|yaml|yml)$
+  pass_filenames: false
+  minimum_pre_commit_version: "2.9.0"

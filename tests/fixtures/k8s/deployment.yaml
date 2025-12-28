@@ -1,0 +1,64 @@
+# K8s Deployment fixture for testing k8s-sync command
+# Contains various env patterns: direct values, secretKeyRef, configMapKeyRef, envFrom
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-app
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: test-app
+  template:
+    metadata:
+      labels:
+        app: test-app
+    spec:
+      containers:
+        - name: app
+          image: test-app:latest
+          env:
+            # Direct value - should be detected
+            - name: DATABASE_HOST
+              value: "postgres.default.svc.cluster.local"
+            
+            # Direct value - should be detected
+            - name: DATABASE_PORT
+              value: "5432"
+            
+            # From secret - both name and key should be detected
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-secrets
+                  key: password
+            
+            # From secret - should be detected
+            - name: API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: api-secrets
+                  key: api-key
+            
+            # From configMap - should be detected
+            - name: APP_ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: environment
+            
+            # This key is NOT in .env.example - should trigger W005
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-secrets
+                  key: postgres-password
+          
+          # envFrom with secretRef - all keys from secret should be detected
+          envFrom:
+            - secretRef:
+                name: additional-secrets
+            - configMapRef:
+                name: additional-config

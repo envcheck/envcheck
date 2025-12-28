@@ -1,0 +1,171 @@
+[package]
+name = "envcheck"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.75"
+authors = ["Stefan <stefan@example.com>"]
+description = "A fast, modern CLI for linting .env files and detecting K8s ↔ env mismatches"
+license = "MIT"
+repository = "https://github.com/envcheck/envcheck"
+keywords = ["env", "dotenv", "lint", "kubernetes", "devops"]
+categories = ["command-line-utilities", "development-tools"]
+readme = "README.md"
+exclude = ["tests/fixtures/*", ".github/*"]
+
+[[bin]]
+name = "envcheck"
+path = "src/main.rs"
+
+[lib]
+name = "envcheck"
+path = "src/lib.rs"
+
+[dependencies]
+# CLI framework
+clap = { version = "4.5", features = ["derive", "env", "unicode", "wrap_help"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_yaml = "0.9"
+
+# Error handling
+thiserror = "2.0"
+anyhow = "1.0"
+
+# Output formatting
+colored = "2.1"
+unicode-width = "0.2"
+
+# File system
+glob = "0.3"
+walkdir = "2.5"
+
+# Logging (optional, for debug)
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[dev-dependencies]
+assert_cmd = "2.0"
+predicates = "3.1"
+tempfile = "3.14"
+pretty_assertions = "1.4"
+rstest = "0.23"
+insta = { version = "1.41", features = ["yaml"] }
+
+[profile.release]
+lto = "thin"
+strip = true
+codegen-units = 1
+panic = "abort"
+
+[profile.dev]
+incremental = true
+
+# Strict lints for production-grade code
+[lints.rust]
+unsafe_code = "forbid"
+missing_docs = "allow"
+rust_2018_idioms = { level = "warn", priority = -1 }
+trivial_casts = "warn"
+trivial_numeric_casts = "warn"
+unused_lifetimes = "warn"
+unused_qualifications = "warn"
+
+[lints.clippy]
+# Correctness
+correctness = { level = "deny", priority = -1 }
+
+# Suspicious code
+suspicious = { level = "warn", priority = -1 }
+
+# Complexity reduction
+complexity = { level = "warn", priority = -1 }
+
+# Performance
+perf = { level = "warn", priority = -1 }
+
+# Style
+style = { level = "warn", priority = -1 }
+
+# Pedantic (cherry-picked)
+cloned_instead_of_copied = "warn"
+flat_map_option = "warn"
+fn_params_excessive_bools = "warn"
+if_not_else = "warn"
+implicit_clone = "warn"
+inconsistent_struct_constructor = "warn"
+inefficient_to_string = "warn"
+manual_assert = "warn"
+manual_instant_elapsed = "warn"
+manual_let_else = "warn"
+manual_ok_or = "warn"
+manual_string_new = "warn"
+map_unwrap_or = "warn"
+match_bool = "warn"
+match_same_arms = "warn"
+missing_const_for_fn = "warn"
+missing_errors_doc = "allow"
+option_if_let_else = "allow"
+missing_panics_doc = "warn"
+must_use_candidate = "warn"
+needless_continue = "warn"
+needless_for_each = "warn"
+no_effect_underscore_binding = "warn"
+option_as_ref_cloned = "warn"
+redundant_closure_for_method_calls = "warn"
+redundant_else = "warn"
+ref_option = "warn"
+semicolon_if_nothing_returned = "warn"
+single_match_else = "warn"
+string_add_assign = "warn"
+type_repetition_in_bounds = "warn"
+uninlined_format_args = "warn"
+unnecessary_join = "warn"
+unnecessary_wraps = "warn"
+unnested_or_patterns = "warn"
+unused_async = "warn"
+unused_self = "warn"
+used_underscore_binding = "warn"
+verbose_bit_mask = "warn"
+
+# Nursery (stable ones)
+collection_is_never_read = "warn"
+debug_assert_with_mut_call = "warn"
+derive_partial_eq_without_eq = "warn"
+empty_line_after_doc_comments = "warn"
+empty_line_after_outer_attr = "warn"
+equatable_if_let = "warn"
+fallible_impl_from = "warn"
+imprecise_flops = "warn"
+iter_on_empty_collections = "warn"
+iter_on_single_items = "warn"
+iter_with_drain = "warn"
+large_stack_frames = "warn"
+
+mutex_integer = "warn"
+needless_collect = "warn"
+needless_pass_by_ref_mut = "warn"
+nonstandard_macro_braces = "warn"
+
+or_fun_call = "warn"
+path_buf_push_overwrite = "warn"
+read_zero_byte_vec = "warn"
+redundant_clone = "warn"
+significant_drop_in_scrutinee = "warn"
+significant_drop_tightening = "warn"
+string_lit_as_bytes = "warn"
+suboptimal_flops = "warn"
+suspicious_operation_groupings = "warn"
+trailing_empty_array = "warn"
+trait_duplication_in_bounds = "warn"
+transmute_undefined_repr = "warn"
+trivial_regex = "warn"
+tuple_array_conversions = "warn"
+
+uninhabited_references = "warn"
+unnecessary_struct_initialization = "warn"
+unused_peekable = "warn"
+unused_rounding = "warn"
+use_self = "warn"
+useless_let_if_seq = "warn"
