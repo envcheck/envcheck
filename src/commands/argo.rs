@@ -1,5 +1,6 @@
 use crate::error::Result;
 use crate::output::Format;
+use crate::parser::argocd::EnvSource;
 use crate::parser::{argocd, env};
 use colored::*;
 use std::collections::HashSet;
@@ -26,16 +27,21 @@ pub fn run(dir: &Path, env_path: &Path, _format: Format) -> Result<()> {
 
     // Report
     if missing_in_env.is_empty() {
-        println!("{}", "All ArgoCD plugin env vars found in .env!".green());
+        println!("{}", "All ArgoCD env vars found in .env!".green());
         return Ok(());
     }
 
-    println!("{}", "Missing ArgoCD plugin env vars in .env:".red().bold());
+    println!("{}", "Missing ArgoCD env vars in .env:".red().bold());
     for reference in missing_in_env {
+        let source_label = match reference.source {
+            EnvSource::Plugin => "plugin",
+            EnvSource::Kustomize => "kustomize",
+        };
         println!(
-            "  {} {} (defined in {})",
+            "  {} {} ({} in {})",
             "-".red(),
             reference.env_var.bold(),
+            source_label.cyan(),
             reference.path.display()
         );
     }
