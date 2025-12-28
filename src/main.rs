@@ -38,6 +38,7 @@ fn main() -> ExitCode {
         Commands::Helm(args) => commands::helm::run(&args.dir, &args.env, cli.format),
         Commands::Argo(args) => commands::argo::run(&args.dir, &args.env, cli.format),
         Commands::Completions { shell } => commands::completions::run(*shell),
+        Commands::Tui { files } => commands::tui::run(files),
         Commands::Doctor => commands::doctor::run(cli.format),
     };
 

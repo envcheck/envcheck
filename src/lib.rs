@@ -18,6 +18,7 @@
 #![doc(html_root_url = "https://docs.rs/envcheck/0.1.0")]
 
 pub mod commands;
+pub mod config;
 pub mod error;
 pub mod output;
 pub mod parser;

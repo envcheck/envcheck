@@ -9,6 +9,7 @@ pub mod helm;
 pub mod k8s_sync;
 pub mod lint;
 pub mod terraform;
+pub mod tui;
 
 use clap::{Args, Subcommand};
 use std::path::PathBuf;
@@ -72,6 +73,13 @@ pub enum Commands {
         /// Shell to generate completions for
         #[arg(value_enum)]
         shell: clap_complete::Shell,
+    },
+
+    /// Interactive TUI for comparing .env files
+    Tui {
+        /// .env files to compare
+        #[arg(required = true)]
+        files: Vec<PathBuf>,
     },
 
     /// Lint all .env files in the current directory
