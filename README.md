@@ -114,9 +114,18 @@ repos:
 
 ## Roadmap
 
-- [x] **Auto-fix**: Automatically sort keys (`fix`).
-- [ ] **Interactive Mode**: Guided fixes for mismatches.
-- [ ] **Shell Completions**: Native shell autocompletion.
+ArgoCD (GitOps) 🐙
+Why: The de-facto standard for GitOps.
+Check: Parse Application manifests for plugin.env, kustomize.commonEnv and map them to known secrets.
+Status: Added to Roadmap.
+GitHub Actions (CI/CD) 🤖
+Why: The most common place where "it works locally but fails in CI" happens due to missing secrets.
+Check: Scan .github/workflows/*.yml for env: blocks and secrets.* usage.
+Status: Added to Roadmap.
+Helm (Packaging) ⎈
+Why: Still the standard K8s package manager.
+Check: Heuristic scan of values.yaml for explicit environment config (e.g., keys like DB_PASSWORD).
+Status: Added to Roadmap.
 
 ## License
 

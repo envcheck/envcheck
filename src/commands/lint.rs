@@ -1,41 +1,47 @@
 use std::io;
 use std::path::PathBuf;
+use std::sync::atomic::{AtomicUsize, Ordering};
+
+use rayon::prelude::*;
 
 use crate::error::Result;
 use crate::output::{write_diagnostics, Format};
 use crate::parser::EnvFile;
-use crate::rules::{check_file, Severity};
+use crate::rules::{check_file, Diagnostic, Severity};
 
 pub fn run(files: &[PathBuf], format: Format) -> Result<()> {
-    let mut all_diagnostics = Vec::new();
-    let mut error_count = 0;
-    let mut warning_count = 0;
+    let error_count = AtomicUsize::new(0);
+    let warning_count = AtomicUsize::new(0);
 
-    for path in files {
-        // Parse the file
-        // We accumulate errors rather than failing early if possible,
-        // but for read errors we might want to warn and continue?
-        // Let's just try to parse. If it fails (e.g. read error), we report it.
-        // Wait, EnvFile::parse returns Result.
-        match EnvFile::parse(path) {
+    // Process files in parallel
+    let results: Vec<_> = files
+        .par_iter()
+        .map(|path| match EnvFile::parse(path) {
             Ok(env_file) => {
                 let diagnostics = check_file(&env_file);
                 for d in &diagnostics {
                     match d.severity {
-                        Severity::Error => error_count += 1,
-                        Severity::Warning => warning_count += 1,
+                        Severity::Error => {
+                            error_count.fetch_add(1, Ordering::Relaxed);
+                        },
+                        Severity::Warning => {
+                            warning_count.fetch_add(1, Ordering::Relaxed);
+                        },
                         _ => {},
                     }
                 }
-                all_diagnostics.extend(diagnostics);
+                Ok(diagnostics)
             },
-            Err(e) => {
-                // Return early on parse/io error for a specific file?
-                // Or maybe create a generic "FileReadError" diagnostic?
-                // The requirements say "exit code 1 on lint errors".
-                // If we can't read a file, that's likely an error.
-                return Err(e);
-            },
+            Err(e) => Err(e),
+        })
+        .collect();
+
+    // Flatten results, propagating first error if any
+    let mut all_diagnostics: Vec<Diagnostic> = Vec::new();
+    for result in results {
+        match result {
+            Ok(diagnostics) => all_diagnostics.extend(diagnostics),
+            Err(e) => return Err(e),
         }
     }
 
@@ -47,10 +53,10 @@ pub fn run(files: &[PathBuf], format: Format) -> Result<()> {
     write_diagnostics(format, &all_diagnostics, &mut handle)
         .map_err(|e| crate::error::EnvCheckError::read_error("stdout", e))?;
 
-    if error_count > 0 {
+    if error_count.load(Ordering::Relaxed) > 0 {
         Err(crate::error::EnvCheckError::LintFailed {
-            error_count,
-            warning_count,
+            error_count: error_count.load(Ordering::Relaxed),
+            warning_count: warning_count.load(Ordering::Relaxed),
         })
     } else {
         Ok(())

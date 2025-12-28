@@ -1,0 +1,8 @@
+- name: Deploy application
+  hosts: all
+  tasks:
+    - name: Set environment variable
+      ansible.builtin.shell: echo "Hello"
+      environment:
+        API_KEY: "{{ lookup('env', 'API_KEY') }}"
+        DB_HOST: "{{ lookup('env', 'DB_HOST') }}"

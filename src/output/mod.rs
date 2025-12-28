@@ -3,6 +3,7 @@ use std::io::Write;
 
 mod github;
 mod json;
+mod sarif;
 mod text;
 
 pub use github::GithubFormatter;
@@ -15,6 +16,7 @@ pub enum Format {
     Text,
     Json,
     Github,
+    Sarif,
 }
 
 impl std::str::FromStr for Format {
@@ -25,6 +27,7 @@ impl std::str::FromStr for Format {
             "text" => Ok(Self::Text),
             "json" => Ok(Self::Json),
             "github" => Ok(Self::Github),
+            "sarif" => Ok(Self::Sarif),
             _ => Err(format!("Unknown format: {s}")),
         }
     }
@@ -46,5 +49,6 @@ pub fn write_diagnostics(
         Format::Text => TextFormatter.write(diagnostics, writer),
         Format::Json => JsonFormatter.write(diagnostics, writer),
         Format::Github => GithubFormatter.write(diagnostics, writer),
+        Format::Sarif => sarif::write_sarif(diagnostics, writer),
     }
 }

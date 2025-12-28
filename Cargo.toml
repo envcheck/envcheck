@@ -20,6 +20,10 @@ path = "src/main.rs"
 name = "envcheck"
 path = "src/lib.rs"
 
+[[bench]]
+name = "lint_benchmark"
+harness = false
+
 [dependencies]
 # CLI framework
 clap = { version = "4.5", features = ["derive", "env", "unicode", "wrap_help"] }
@@ -44,6 +48,10 @@ walkdir = "2.5"
 # Logging (optional, for debug)
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+hcl-rs = "0.19.4"
+regex = "1.12.2"
+rayon = "1.10.0"
+clap_complete = "4.5.62"
 
 [dev-dependencies]
 assert_cmd = "2.0"
@@ -52,6 +60,7 @@ tempfile = "3.14"
 pretty_assertions = "1.4"
 rstest = "0.23"
 insta = { version = "1.41", features = ["yaml"] }
+criterion = { version = "0.5.1", features = ["html_reports"] }
 
 [profile.release]
 lto = "thin"

@@ -8,7 +8,7 @@ use envcheck::output::Format;
 #[command(name = "envcheck")]
 #[command(about = "A fast, modern CLI for linting .env files", long_about = None)]
 #[command(version)]
-struct Cli {
+pub struct Cli {
     #[command(subcommand)]
     command: Commands,
 
@@ -30,8 +30,14 @@ fn main() -> ExitCode {
     let result = match &cli.command {
         Commands::Lint { files } => commands::lint::run(files, cli.format),
         Commands::Compare { files } => commands::compare::run(files, cli.format),
-        Commands::Fix { files } => commands::fix::run(files),
+        Commands::Fix { files, commit, pr } => commands::fix::run(files, *commit, *pr),
         Commands::K8sSync { manifests, env } => commands::k8s_sync::run(manifests, env, cli.format),
+        Commands::Terraform(args) => commands::terraform::run(&args.dir, &args.env, cli.format),
+        Commands::Ansible(args) => commands::ansible::run(&args.dir, &args.env, cli.format),
+        Commands::Actions(args) => commands::actions::run(&args.dir, &args.env, cli.format),
+        Commands::Helm(args) => commands::helm::run(&args.dir, &args.env, cli.format),
+        Commands::Argo(args) => commands::argo::run(&args.dir, &args.env, cli.format),
+        Commands::Completions { shell } => commands::completions::run(*shell),
         Commands::Doctor => commands::doctor::run(cli.format),
     };
 

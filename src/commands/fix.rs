@@ -1,6 +1,7 @@
 use crate::error::{EnvCheckError, Result};
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::process::Command;
 
 #[derive(Debug, Clone)]
 struct EnvEntry {
@@ -16,10 +17,35 @@ struct EnvEntry {
     original_lines: Vec<String>,
 }
 
-pub fn run(files: &[PathBuf]) -> Result<()> {
+pub fn run(files: &[PathBuf], commit: bool, pr: bool) -> Result<()> {
     for path in files {
         fix_file(path)?;
     }
+
+    if commit || pr {
+        // Stage the fixed files
+        let file_args: Vec<&str> = files.iter().filter_map(|p| p.to_str()).collect();
+        let _ = Command::new("git").arg("add").args(&file_args).status();
+
+        // Commit
+        let _ = Command::new("git")
+            .args(["commit", "-m", "fix: auto-fix .env files via envcheck"])
+            .status();
+
+        if pr {
+            // Create PR using gh CLI
+            let _ = Command::new("gh")
+                .args([
+                    "pr",
+                    "create",
+                    "--fill",
+                    "--title",
+                    "fix: auto-fix .env files",
+                ])
+                .status();
+        }
+    }
+
     Ok(())
 }
 
