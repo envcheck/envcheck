@@ -1,0 +1,45 @@
+# Example .envcheckrc.yaml configuration
+# JSON Schema: https://envcheck.github.io/schema/envcheckrc.json
+
+# Rule configuration
+rules:
+  # Disable specific rules
+  disable:
+    - W003 # Don't warn about unsorted keys
+
+  # Treat warnings as errors
+  warnings_as_errors: false
+
+  # Override severity for specific rules
+  severity:
+    W001: error # Make empty values an error
+
+# Files to ignore (glob patterns)
+ignore:
+  - "*.local"
+  - "*.test"
+  - ".env.development"
+
+# Default output format (text, json, github, sarif)
+format: text
+
+# Default files to lint
+files:
+  - .env
+  - .env.example
+
+# Kubernetes sync configuration
+k8s:
+  manifests:
+    - k8s/*.yaml
+  env_file: .env
+
+# Terraform integration
+terraform:
+  dir: infra/
+  env_file: .env
+
+# GitHub Actions integration
+github_actions:
+  dir: .github/workflows
+  env_file: .env

@@ -71,6 +71,55 @@ impl Config {
     pub fn is_rule_disabled(&self, rule_id: &str) -> bool {
         self.rules.disable.iter().any(|r| r == rule_id)
     }
+
+    /// Load ignore patterns from .envcheckignore file
+    pub fn load_ignore_file(start: &Path) -> Vec<String> {
+        let mut current = start.canonicalize().ok();
+
+        while let Some(dir) = current {
+            let ignore_path = dir.join(".envcheckignore");
+            if ignore_path.exists() {
+                if let Ok(content) = fs::read_to_string(&ignore_path) {
+                    return content
+                        .lines()
+                        .filter(|line| !line.trim().is_empty() && !line.starts_with('#'))
+                        .map(|s| s.trim().to_string())
+                        .collect();
+                }
+            }
+            current = dir.parent().map(|p| p.to_path_buf());
+        }
+
+        Vec::new()
+    }
+
+    /// Check if a path should be ignored based on patterns
+    pub fn should_ignore(path: &Path, patterns: &[String]) -> bool {
+        let path_str = path.to_string_lossy();
+        let file_name = path
+            .file_name()
+            .map(|n| n.to_string_lossy())
+            .unwrap_or_default();
+
+        for pattern in patterns {
+            // Simple glob matching
+            if pattern.starts_with('*') {
+                let suffix = &pattern[1..];
+                if path_str.ends_with(suffix) || file_name.ends_with(suffix) {
+                    return true;
+                }
+            } else if pattern.ends_with('*') {
+                let prefix = &pattern[..pattern.len() - 1];
+                if path_str.starts_with(prefix) || file_name.starts_with(prefix) {
+                    return true;
+                }
+            } else if path_str.contains(pattern) || file_name.as_ref() == pattern {
+                return true;
+            }
+        }
+
+        false
+    }
 }
 
 #[cfg(test)]

@@ -1,0 +1,205 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://envcheck.github.io/schema/envcheckrc.json",
+    "title": "envcheck Configuration",
+    "description": "Configuration file for envcheck CLI (.envcheckrc.yaml or .envcheckrc.toml)",
+    "type": "object",
+    "properties": {
+        "rules": {
+            "type": "object",
+            "description": "Rule configuration",
+            "properties": {
+                "disable": {
+                    "type": "array",
+                    "description": "List of rule IDs to disable",
+                    "items": {
+                        "type": "string",
+                        "enum": [
+                            "E001",
+                            "E002",
+                            "W001",
+                            "W002",
+                            "W003",
+                            "W004",
+                            "W005",
+                            "W006"
+                        ]
+                    },
+                    "examples": [
+                        [
+                            "W001",
+                            "W002"
+                        ]
+                    ]
+                },
+                "warnings_as_errors": {
+                    "type": "boolean",
+                    "description": "Treat warnings as errors",
+                    "default": false
+                },
+                "severity": {
+                    "type": "object",
+                    "description": "Override severity for specific rules",
+                    "additionalProperties": {
+                        "type": "string",
+                        "enum": [
+                            "error",
+                            "warning",
+                            "info"
+                        ]
+                    },
+                    "examples": [
+                        {
+                            "W001": "error",
+                            "W002": "info"
+                        }
+                    ]
+                }
+            }
+        },
+        "ignore": {
+            "type": "array",
+            "description": "Glob patterns for files to ignore",
+            "items": {
+                "type": "string"
+            },
+            "examples": [
+                [
+                    "*.local",
+                    "*.test",
+                    ".env.development"
+                ]
+            ]
+        },
+        "format": {
+            "type": "string",
+            "description": "Default output format",
+            "enum": [
+                "text",
+                "json",
+                "github",
+                "sarif"
+            ],
+            "default": "text"
+        },
+        "files": {
+            "type": "array",
+            "description": "Default files to lint when none specified",
+            "items": {
+                "type": "string"
+            },
+            "examples": [
+                [
+                    ".env",
+                    ".env.example",
+                    ".env.local"
+                ]
+            ]
+        },
+        "k8s": {
+            "type": "object",
+            "description": "Kubernetes sync configuration",
+            "properties": {
+                "manifests": {
+                    "type": "array",
+                    "description": "Glob patterns for K8s manifests",
+                    "items": {
+                        "type": "string"
+                    },
+                    "examples": [
+                        [
+                            "k8s/*.yaml",
+                            "deploy/**/*.yml"
+                        ]
+                    ]
+                },
+                "env_file": {
+                    "type": "string",
+                    "description": "Path to .env file for K8s sync",
+                    "default": ".env"
+                }
+            }
+        },
+        "terraform": {
+            "type": "object",
+            "description": "Terraform integration configuration",
+            "properties": {
+                "dir": {
+                    "type": "string",
+                    "description": "Directory containing .tf files",
+                    "default": "."
+                },
+                "env_file": {
+                    "type": "string",
+                    "description": "Path to .env file",
+                    "default": ".env"
+                }
+            }
+        },
+        "ansible": {
+            "type": "object",
+            "description": "Ansible integration configuration",
+            "properties": {
+                "dir": {
+                    "type": "string",
+                    "description": "Directory containing playbooks",
+                    "default": "."
+                },
+                "env_file": {
+                    "type": "string",
+                    "description": "Path to .env file",
+                    "default": ".env"
+                }
+            }
+        },
+        "github_actions": {
+            "type": "object",
+            "description": "GitHub Actions integration configuration",
+            "properties": {
+                "dir": {
+                    "type": "string",
+                    "description": "Directory containing workflows",
+                    "default": ".github/workflows"
+                },
+                "env_file": {
+                    "type": "string",
+                    "description": "Path to .env file",
+                    "default": ".env"
+                }
+            }
+        },
+        "helm": {
+            "type": "object",
+            "description": "Helm integration configuration",
+            "properties": {
+                "dir": {
+                    "type": "string",
+                    "description": "Directory containing Helm charts",
+                    "default": "."
+                },
+                "env_file": {
+                    "type": "string",
+                    "description": "Path to .env file",
+                    "default": ".env"
+                }
+            }
+        },
+        "argocd": {
+            "type": "object",
+            "description": "ArgoCD integration configuration",
+            "properties": {
+                "dir": {
+                    "type": "string",
+                    "description": "Directory containing Application manifests",
+                    "default": "."
+                },
+                "env_file": {
+                    "type": "string",
+                    "description": "Path to .env file",
+                    "default": ".env"
+                }
+            }
+        }
+    },
+    "additionalProperties": false
+}

@@ -1,0 +1,17 @@
+# envcheck ignore file
+# Lines starting with # are comments
+# Use glob patterns to ignore files
+
+# Ignore local files
+*.local
+*.local.env
+
+# Ignore test fixtures
+tests/fixtures/**
+
+# Ignore generated files
+.env.generated
+.env.bak
+
+# Ignore secrets (but you should use proper secret management!)
+# .env.secrets
