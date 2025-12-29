@@ -24,11 +24,10 @@ pub fn generate_pr_comment(diagnostics: &[Diagnostic]) -> String {
 
     if error_count > 0 {
         output.push_str(&format!(
-            "## ❌ envcheck: {} error(s), {} warning(s)\n\n",
-            error_count, warning_count
+            "## ❌ envcheck: {error_count} error(s), {warning_count} warning(s)\n\n"
         ));
     } else {
-        output.push_str(&format!("## ⚠️ envcheck: {} warning(s)\n\n", warning_count));
+        output.push_str(&format!("## ⚠️ envcheck: {warning_count} warning(s)\n\n"));
     }
 
     // Summary table
@@ -47,10 +46,7 @@ pub fn generate_pr_comment(diagnostics: &[Diagnostic]) -> String {
             .file_name()
             .map(|n| n.to_string_lossy())
             .unwrap_or_default();
-        let line = d
-            .line
-            .map(|l| l.to_string())
-            .unwrap_or_else(|| "-".to_string());
+        let line = d.line.map_or_else(|| "-".to_string(), |l| l.to_string());
 
         output.push_str(&format!(
             "| {} | {} | {} | {} | {} |\n",

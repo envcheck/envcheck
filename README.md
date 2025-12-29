@@ -40,9 +40,9 @@ cargo install envcheck
 
 ### npm
 ```bash
-npm install -g envcheck
+npm install -g @envcheck/cli
 # or use without installing
-npx envcheck lint .env
+npx @envcheck/cli lint .env
 ```
 
 ### Homebrew

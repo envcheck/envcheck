@@ -76,22 +76,21 @@ fn run_tui(env_files: &[(PathBuf, EnvFile)], keys: &[String]) -> io::Result<()> 
             // Main content - split horizontally
             let main_chunks = Layout::default()
                 .direction(Direction::Horizontal)
-                .constraints(
-                    std::iter::repeat(Constraint::Percentage(100 / env_files.len() as u16))
-                        .take(env_files.len())
-                        .collect::<Vec<_>>(),
-                )
+                .constraints(vec![
+                    Constraint::Percentage(100 / env_files.len() as u16);
+                    env_files.len()
+                ])
                 .split(chunks[1]);
 
             // Render each file's keys
             for (i, (path, env_file)) in env_files.iter().enumerate() {
-                let items: Vec<ListItem> = keys
+                let items: Vec<ListItem<'_>> = keys
                     .iter()
                     .map(|key| {
                         let value = env_file.vars.iter().find(|v| &v.key == key);
                         let display = match value {
-                            Some(v) => format!("{} = {}", key, v.value),
-                            None => format!("{} = <missing>", key),
+                            Some(v) => format!("{key} = {}", v.value),
+                            None => format!("{key} = <missing>"),
                         };
                         let style = if value.is_none() {
                             Style::default().fg(Color::Red)

@@ -31,11 +31,13 @@ pub struct RulesConfig {
 
 impl Config {
     /// Load configuration from the current directory or parents
+    #[must_use]
     pub fn load() -> Self {
         Self::load_from_path(Path::new("."))
     }
 
     /// Load configuration from a specific path
+    #[must_use]
     pub fn load_from_path(start: &Path) -> Self {
         let mut current = start.canonicalize().ok();
 
@@ -61,18 +63,20 @@ impl Config {
             }
 
             // Move to parent
-            current = dir.parent().map(|p| p.to_path_buf());
+            current = dir.parent().map(Path::to_path_buf);
         }
 
         Self::default()
     }
 
     /// Check if a rule is disabled
+    #[must_use]
     pub fn is_rule_disabled(&self, rule_id: &str) -> bool {
         self.rules.disable.iter().any(|r| r == rule_id)
     }
 
     /// Load ignore patterns from .envcheckignore file
+    #[must_use]
     pub fn load_ignore_file(start: &Path) -> Vec<String> {
         let mut current = start.canonicalize().ok();
 
@@ -87,13 +91,14 @@ impl Config {
                         .collect();
                 }
             }
-            current = dir.parent().map(|p| p.to_path_buf());
+            current = dir.parent().map(Path::to_path_buf);
         }
 
         Vec::new()
     }
 
     /// Check if a path should be ignored based on patterns
+    #[must_use]
     pub fn should_ignore(path: &Path, patterns: &[String]) -> bool {
         let path_str = path.to_string_lossy();
         let file_name = path
@@ -103,8 +108,7 @@ impl Config {
 
         for pattern in patterns {
             // Simple glob matching
-            if pattern.starts_with('*') {
-                let suffix = &pattern[1..];
+            if let Some(suffix) = pattern.strip_prefix('*') {
                 if path_str.ends_with(suffix) || file_name.ends_with(suffix) {
                     return true;
                 }
@@ -154,18 +158,7 @@ format: json
 
     #[test]
     fn test_toml_parsing() {
-        let toml_str = r#"
-format = "sarif"
-
-[rules]
-disable = ["E001"]
-warnings_as_errors = false
-
-[[ignore]]
-pattern = "*.test"
-"#;
-        // Note: This TOML structure doesn't match our Config exactly,
-        // but demonstrates the parsing capability
+        // Test TOML parsing capability
         let config: Config = toml::from_str(
             r#"
 format = "sarif"

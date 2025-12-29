@@ -4,7 +4,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct GitHubActionEnvRef {
     pub env_var: String,
     pub path: PathBuf,
@@ -25,12 +25,15 @@ pub fn parse_directory(dir: &Path) -> Result<Vec<GitHubActionEnvRef>> {
         return Ok(refs);
     }
 
-    for entry in WalkDir::new(dir).into_iter().filter_map(|e| e.ok()) {
+    for entry in WalkDir::new(dir)
+        .into_iter()
+        .filter_map(std::result::Result::ok)
+    {
         let path = entry.path();
         if path.is_file()
             && path
                 .extension()
-                .map_or(false, |ext| ext == "yml" || ext == "yaml")
+                .is_some_and(|ext| ext == "yml" || ext == "yaml")
         {
             // Optimization: Skip loop if not in .github/workflows if we are scanning root?
             // For now, scan all YAMLs? No, that might be too broad.

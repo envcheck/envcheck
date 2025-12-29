@@ -5,7 +5,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct HelmEnvRef {
     pub env_var: String,
     pub path: PathBuf,
@@ -16,7 +16,10 @@ pub fn parse_directory(dir: &Path) -> Result<Vec<HelmEnvRef>> {
     let re = Regex::new(r"^[A-Z][A-Z0-9_]+$")
         .map_err(|e| EnvCheckError::parse_error(PathBuf::from("regex"), 0, e.to_string()))?;
 
-    for entry in WalkDir::new(dir).into_iter().filter_map(|e| e.ok()) {
+    for entry in WalkDir::new(dir)
+        .into_iter()
+        .filter_map(std::result::Result::ok)
+    {
         let path = entry.path();
         // Look for values.yaml or *-values.yaml
         let fname = path.file_name().and_then(|f| f.to_str()).unwrap_or("");

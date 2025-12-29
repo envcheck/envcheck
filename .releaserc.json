@@ -10,8 +10,8 @@
     [
       "@semantic-release/exec",
       {
-        "prepareCmd": "sed -i 's/^version = \".*\"/version = \"${nextRelease.version}\"/' Cargo.toml && cargo build --quiet && git add Cargo.lock",
-        "publishCmd": "cargo publish --token ${process.env.CARGO_REGISTRY_TOKEN} --allow-dirty"
+        "prepareCmd": "sed -i 's/^version = \".*\"/version = \"${nextRelease.version}\"/' Cargo.toml && cargo build --quiet && git add Cargo.lock && cd ../envcheck-npm && npm version ${nextRelease.version} --no-git-tag-version && git add package.json",
+        "publishCmd": "cargo publish --token ${process.env.CARGO_REGISTRY_TOKEN} --allow-dirty && cd ../envcheck-npm && npm publish --access public"
       }
     ],
     [

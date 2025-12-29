@@ -3,7 +3,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TerraformVariable {
     pub name: String,
     pub path: PathBuf,
@@ -12,9 +12,12 @@ pub struct TerraformVariable {
 pub fn parse_directory(dir: &Path) -> Result<Vec<TerraformVariable>> {
     let mut variables = Vec::new();
 
-    for entry in WalkDir::new(dir).into_iter().filter_map(|e| e.ok()) {
+    for entry in WalkDir::new(dir)
+        .into_iter()
+        .filter_map(std::result::Result::ok)
+    {
         let path = entry.path();
-        if path.is_file() && path.extension().map_or(false, |ext| ext == "tf") {
+        if path.is_file() && path.extension().is_some_and(|ext| ext == "tf") {
             let content =
                 fs::read_to_string(path).map_err(|e| EnvCheckError::read_error(path, e))?;
 

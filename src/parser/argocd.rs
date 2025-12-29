@@ -4,7 +4,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ArgoCDEnvRef {
     pub env_var: String,
     pub path: PathBuf,
@@ -12,7 +12,7 @@ pub struct ArgoCDEnvRef {
     pub source: EnvSource,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum EnvSource {
     Plugin,
     Kustomize,
@@ -21,12 +21,15 @@ pub enum EnvSource {
 pub fn parse_directory(dir: &Path) -> Result<Vec<ArgoCDEnvRef>> {
     let mut refs = Vec::new();
 
-    for entry in WalkDir::new(dir).into_iter().filter_map(|e| e.ok()) {
+    for entry in WalkDir::new(dir)
+        .into_iter()
+        .filter_map(std::result::Result::ok)
+    {
         let path = entry.path();
         if path.is_file()
             && path
                 .extension()
-                .map_or(false, |ext| ext == "yml" || ext == "yaml")
+                .is_some_and(|ext| ext == "yml" || ext == "yaml")
         {
             let content =
                 fs::read_to_string(path).map_err(|e| EnvCheckError::read_error(path, e))?;

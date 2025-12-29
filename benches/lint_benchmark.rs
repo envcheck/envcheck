@@ -14,7 +14,7 @@ fn bench_parse_env_file(c: &mut Criterion) {
         b.iter(|| {
             let env_file = EnvFile::parse(black_box(&fixture)).unwrap();
             black_box(env_file)
-        })
+        });
     });
 }
 
@@ -31,7 +31,7 @@ fn bench_lint_rules(c: &mut Criterion) {
         b.iter(|| {
             let diagnostics = check_file(black_box(&env_file));
             black_box(diagnostics)
-        })
+        });
     });
 }
 
@@ -44,8 +44,8 @@ fn bench_parallel_vs_sequential(c: &mut Criterion) {
     // Collect all .env files in the fixture directory
     let files: Vec<PathBuf> = std::fs::read_dir(&fixture_dir)
         .unwrap()
-        .filter_map(|e| e.ok())
-        .filter(|e| e.path().extension().map_or(false, |ext| ext == "env"))
+        .filter_map(Result::ok)
+        .filter(|e| e.path().extension().is_some_and(|ext| ext == "env"))
         .map(|e| e.path())
         .collect();
 
@@ -57,7 +57,7 @@ fn bench_parallel_vs_sequential(c: &mut Criterion) {
                 let env_file = EnvFile::parse(path).unwrap();
                 let _ = check_file(&env_file);
             }
-        })
+        });
     });
 
     group.bench_function("parallel", |b| {
@@ -67,7 +67,7 @@ fn bench_parallel_vs_sequential(c: &mut Criterion) {
                 let env_file = EnvFile::parse(path).unwrap();
                 let _ = check_file(&env_file);
             });
-        })
+        });
     });
 
     group.finish();

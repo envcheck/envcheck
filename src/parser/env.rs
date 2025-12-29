@@ -35,6 +35,7 @@ pub struct EnvVarRef<'a> {
 
 impl<'a> EnvVarRef<'a> {
     /// Convert to owned EnvVar
+    #[must_use]
     pub fn to_owned(&self) -> EnvVar {
         EnvVar {
             key: self.key.to_string(),
@@ -134,6 +135,7 @@ pub struct EnvVarIter<'a> {
 }
 
 impl<'a> EnvVarIter<'a> {
+    #[must_use]
     pub fn new(content: &'a str) -> Self {
         Self {
             lines: content.lines(),

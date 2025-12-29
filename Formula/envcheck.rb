@@ -4,7 +4,7 @@
 class Envcheck < Formula
   desc "Fast, modern Rust CLI for linting .env files and DevSecOps integrations"
   homepage "https://github.com/envcheck/envcheck"
-  version "0.1.0"
+  version "1.1.0"
   license "MIT"
 
   on_macos do
