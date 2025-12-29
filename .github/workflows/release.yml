@@ -73,12 +73,12 @@ jobs:
           name: envcheck-${{ matrix.target }}
           path: envcheck-${{ matrix.target }}.${{ matrix.archive }}
 
-  # Semantic release with binary uploads
-  release:
-    name: Release
+  # Semantic release for main branch (automated versioning)
+  semantic-release:
+    name: Semantic Release
     needs: build
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+    if: github.ref == 'refs/heads/main'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -107,10 +107,44 @@ jobs:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
         run: semantic-release
 
-      - name: Upload release assets
-        if: env.NEW_VERSION != ''
+  # Direct release for manual tags (v*)
+  tag-release:
+    name: Tag Release
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Get version from tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Update Cargo.toml version
+        run: |
+          VERSION="${{ steps.get_version.outputs.VERSION }}"
+          VERSION="${VERSION#v}"
+          sed -i "s/^version = \".*\"/version = \"${VERSION}\"/" Cargo.toml
+
+      - name: Publish to crates.io
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: cargo publish --token $CARGO_REGISTRY_TOKEN --allow-dirty
+
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
+          name: ${{ steps.get_version.outputs.VERSION }}
+          generate_release_notes: true
           files: |
             artifacts/**/*.tar.gz
             artifacts/**/*.zip
