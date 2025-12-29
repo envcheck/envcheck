@@ -2,7 +2,7 @@
 
 [![Crates.io](https://img.shields.io/crates/v/envcheck.svg)](https://crates.io/crates/envcheck)
 [![CI](https://github.com/envcheck/envcheck/actions/workflows/ci.yml/badge.svg)](https://github.com/envcheck/envcheck/actions)
-[![npm](https://img.shields.io/npm/v/envcheck)](https://www.npmjs.com/package/envcheck)
+[![npm](https://img.shields.io/npm/v/@envcheck/cli)](https://www.npmjs.com/package/@envcheck/cli)
 
 A fast, modern Rust CLI for linting `.env` files and ensuring environment synchronization across your entire DevSecOps stack.
 
